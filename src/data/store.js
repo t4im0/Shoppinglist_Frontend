@@ -1,8 +1,21 @@
-import { reactive, computed } from 'vue'
-import { sampleData } from './sampleData'
+import { reactive, ref, computed } from 'vue'
 
-// Gemeinsamer Zustand aller Seiten. Änderungen leben nur im Browser, bis es das Backend gibt (M4).
-export const listen = reactive(structuredClone(sampleData))
+// Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend, Änderungen leben aber nur im Browser (bis M4).
+export const listen = reactive([])
+export const ladestatus = ref('laden')
+
+export async function listenLaden() {
+  ladestatus.value = 'laden'
+  try {
+    const antwort = await fetch(`${import.meta.env.VITE_API_URL}/shoppinglists`)
+    if (!antwort.ok) throw new Error(`HTTP ${antwort.status}`)
+    listen.splice(0, listen.length, ...(await antwort.json()))
+    ladestatus.value = 'fertig'
+  } catch (fehler) {
+    console.error('Listen konnten nicht geladen werden:', fehler)
+    ladestatus.value = 'fehler'
+  }
+}
 
 let naechsteId = 1000
 
