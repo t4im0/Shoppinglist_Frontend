@@ -4,17 +4,23 @@ import { reactive, ref, computed } from 'vue'
 export const listen = reactive([])
 export const ladestatus = ref('laden')
 
-export async function listenLaden() {
-  ladestatus.value = 'laden'
-  try {
-    const antwort = await fetch(`${import.meta.env.VITE_API_URL}/shoppinglists`)
-    if (!antwort.ok) throw new Error(`HTTP ${antwort.status}`)
-    listen.splice(0, listen.length, ...(await antwort.json()))
-    ladestatus.value = 'fertig'
-  } catch (fehler) {
-    console.error('Listen konnten nicht geladen werden:', fehler)
-    ladestatus.value = 'fehler'
+export function listenLaden() {
+  const endpoint = `${import.meta.env.VITE_API_URL}/shoppinglists`
+  const requestOptions = {
+    method: 'GET',
+    redirect: 'follow',
   }
+  ladestatus.value = 'laden'
+  fetch(endpoint, requestOptions)
+    .then((response) => response.json())
+    .then((result) => {
+      result.forEach((liste) => listen.push(liste))
+      ladestatus.value = 'fertig'
+    })
+    .catch((error) => {
+      console.log('error', error)
+      ladestatus.value = 'fehler'
+    })
 }
 
 let naechsteId = 1000
