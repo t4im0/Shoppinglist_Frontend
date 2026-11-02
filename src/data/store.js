@@ -1,26 +1,25 @@
 import { reactive, ref, computed } from 'vue'
+import axios from 'axios'
 
 // Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend, Änderungen leben aber nur im Browser (bis M4).
 export const listen = reactive([])
 export const ladestatus = ref('laden')
 
-export function listenLaden() {
-  const endpoint = `${import.meta.env.VITE_API_URL}/shoppinglists`
-  const requestOptions = {
-    method: 'GET',
-    redirect: 'follow',
-  }
+export async function listenLaden() {
+  const baseUrl = import.meta.env.VITE_API_URL // 'http://localhost:8080' im Dev-Modus
+  const endpoint = baseUrl + '/shoppinglists'
   ladestatus.value = 'laden'
-  fetch(endpoint, requestOptions)
-    .then((response) => response.json())
-    .then((result) => {
-      result.forEach((liste) => listen.push(liste))
-      ladestatus.value = 'fertig'
+  try {
+    const response = await axios.get(endpoint)
+    const responseData = response.data
+    responseData.forEach((liste) => {
+      listen.push(liste)
     })
-    .catch((error) => {
-      console.log('error', error)
-      ladestatus.value = 'fehler'
-    })
+    ladestatus.value = 'fertig'
+  } catch (error) {
+    console.log('error', error)
+    ladestatus.value = 'fehler'
+  }
 }
 
 let naechsteId = 1000
