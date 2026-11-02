@@ -27,13 +27,24 @@ function umbenennenStarten(liste) {
   bearbeiteName.value = liste.name
 }
 
-function umbenennenSpeichern() {
-  if (bearbeiteName.value.trim()) listeUmbenennen(bearbeiteId.value, bearbeiteName.value.trim())
-  bearbeiteId.value = null
+async function umbenennenSpeichern() {
+  try {
+    if (bearbeiteName.value.trim()) await listeUmbenennen(bearbeiteId.value, bearbeiteName.value.trim())
+    bearbeiteId.value = null
+  } catch (error) {
+    console.log('error', error)
+    alert('Die Liste konnte nicht umbenannt werden.')
+  }
 }
 
-function loeschen(liste) {
-  if (confirm(`Liste „${liste.name}“ wirklich löschen?`)) listeLoeschen(liste.id)
+async function loeschen(liste) {
+  if (!confirm(`Liste „${liste.name}“ wirklich löschen?`)) return
+  try {
+    await listeLoeschen(liste.id)
+  } catch (error) {
+    console.log('error', error)
+    alert('Die Liste konnte nicht gelöscht werden.')
+  }
 }
 </script>
 

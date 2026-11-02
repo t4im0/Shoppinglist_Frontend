@@ -2,7 +2,7 @@ import { reactive, ref, computed } from 'vue'
 import axios from 'axios'
 import { accessToken } from '../auth/okta'
 
-// Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend. Neue Listen und Produkte werden in der Datenbank gespeichert. Umbenennen und Löschen von Listen leben noch im Browser.
+// Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend. Alle Änderungen an Listen und Produkten werden über das Backend in der Datenbank gespeichert.
 export const listen = reactive([])
 export const ladestatus = ref('laden')
 
@@ -46,11 +46,13 @@ export async function listeAnlegen(name) {
   listen.push(response.data)
 }
 
-export function listeUmbenennen(id, name) {
-  findeListe(id).name = name
+export async function listeUmbenennen(id, name) {
+  const response = await axios.put(`${import.meta.env.VITE_API_URL}/shoppinglists/${id}`, { name }, mitToken())
+  findeListe(id).name = response.data.name
 }
 
-export function listeLoeschen(id) {
+export async function listeLoeschen(id) {
+  await axios.delete(`${import.meta.env.VITE_API_URL}/shoppinglists/${id}`, mitToken())
   const index = listen.findIndex((liste) => liste.id === id)
   listen.splice(index, 1)
 }
