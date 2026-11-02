@@ -1,5 +1,6 @@
 import { reactive, ref, computed } from 'vue'
 import axios from 'axios'
+import { accessToken } from '../auth/okta'
 
 // Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend, Änderungen leben aber nur im Browser (bis M4).
 export const listen = reactive([])
@@ -10,8 +11,12 @@ export async function listenLaden() {
   const endpoint = baseUrl + '/shoppinglists'
   ladestatus.value = 'laden'
   try {
-    const response = await axios.get(endpoint)
+    // Das Backend gibt nur mit gültigem Okta-Token die Listen der angemeldeten Person heraus
+    const response = await axios.get(endpoint, {
+      headers: { Authorization: `Bearer ${accessToken()}` },
+    })
     const responseData = response.data
+    listen.length = 0
     responseData.forEach((liste) => {
       listen.push(liste)
     })
@@ -20,6 +25,12 @@ export async function listenLaden() {
     console.log('error', error)
     ladestatus.value = 'fehler'
   }
+}
+
+// Beim Abmelden: Listen der vorherigen Person aus dem Browser entfernen
+export function listenLeeren() {
+  listen.length = 0
+  ladestatus.value = 'laden'
 }
 
 let naechsteId = 1000
