@@ -1,12 +1,16 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { findeListe, produktHinzufuegen, produktLoeschen } from '../data/store'
+import { findeListe, produktHinzufuegen, produktLoeschen, leererFilter, produktPasst } from '../data/store'
 import ProduktDialog from '../components/ProduktDialog.vue'
+import SuchLeiste from '../components/SuchLeiste.vue'
 
 const route = useRoute()
 const liste = computed(() => findeListe(route.params.id))
 const dialogOffen = ref(false)
+
+const filter = reactive(leererFilter())
+const gefilterteProdukte = computed(() => (liste.value?.produkte ?? []).filter((produkt) => produktPasst(produkt, filter)))
 
 function hinzufuegen(produkt) {
   produktHinzufuegen(liste.value.id, produkt)
@@ -25,9 +29,13 @@ function hinzufuegen(produkt) {
     </div>
 
     <p v-if="liste.produkte.length === 0" class="gedimmt">Noch keine Produkte in dieser Liste.</p>
+    <template v-else>
+      <SuchLeiste v-model="filter" platzhalter="Produkte durchsuchen …" />
+      <p v-if="gefilterteProdukte.length === 0" class="gedimmt">Kein Produkt passt zu deiner Suche.</p>
+    </template>
 
     <ul class="karten">
-      <li v-for="produkt in liste.produkte" :key="produkt.id" class="karte produkt" :class="{ erledigt: produkt.erledigt }">
+      <li v-for="produkt in gefilterteProdukte" :key="produkt.id" class="karte produkt" :class="{ erledigt: produkt.erledigt }">
         <input v-model="produkt.erledigt" type="checkbox" />
         <div class="produkt-text">
           <strong>{{ produkt.menge }} × {{ produkt.name }}</strong>

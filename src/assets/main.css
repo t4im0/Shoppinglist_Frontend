@@ -79,3 +79,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 .dialog h2 { margin: 0; }
 .dialog label { display: flex; flex-direction: column; gap: 0.3rem; font-weight: 600; }
+
+.suchleiste { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+.suchleiste .filter { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.suchleiste select {
+  flex: 1; min-width: 140px; padding: 0.5rem 0.7rem; border: 1px solid var(--rand); border-radius: 8px; background: white; font: inherit;
+}
+.treffer { font-size: 0.85rem; font-weight: normal; color: var(--farbe-blau); }

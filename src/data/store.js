@@ -62,3 +62,40 @@ export function marktAbgleichen(eingabe) {
   const treffer = bekannteMaerkte.value.find((markt) => markt.toLowerCase() === name.toLowerCase())
   return treffer ?? name
 }
+
+// Startwerte für Suchleiste und Filter
+export function leererFilter() {
+  return { suche: '', markt: '', status: 'alle' }
+}
+
+export function filterAktiv(filter) {
+  return filter.suche.trim() !== '' || filter.markt !== '' || filter.status !== 'alle'
+}
+
+function enthaelt(text, suche) {
+  return (text ?? '').toLowerCase().includes(suche.trim().toLowerCase())
+}
+
+// Prüft, ob ein Produkt zu Suchbegriff, Markt und Status passt
+export function produktPasst(produkt, filter, sucheIgnorieren = false) {
+  const suchePasst =
+    sucheIgnorieren || [produkt.name, produkt.notiz, produkt.markt].some((text) => enthaelt(text, filter.suche))
+  const marktPasst = !filter.markt || produkt.markt === filter.markt
+  const statusPasst =
+    filter.status === 'alle' || (filter.status === 'erledigt' ? produkt.erledigt : !produkt.erledigt)
+  return suchePasst && marktPasst && statusPasst
+}
+
+// Liefert alle Listen, die zum Filter passen, jeweils mit den passenden Produkten als Treffer
+export function listenFiltern(alleListen, filter) {
+  return alleListen
+    .map((liste) => {
+      const nameTrifft = enthaelt(liste.name, filter.suche)
+      // Trifft der Listenname, zählen alle Produkte (nur Markt und Status filtern noch)
+      const treffer = liste.produkte.filter((produkt) => produktPasst(produkt, filter, nameTrifft))
+      const nurSuche = !filter.markt && filter.status === 'alle'
+      const sichtbar = treffer.length > 0 || (nameTrifft && nurSuche)
+      return { liste, treffer, sichtbar }
+    })
+    .filter((eintrag) => eintrag.sichtbar)
+}

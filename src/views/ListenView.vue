@@ -1,11 +1,15 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { listen, listeAnlegen, listeUmbenennen, listeLoeschen } from '../data/store'
+import { listen, listeAnlegen, listeUmbenennen, listeLoeschen, leererFilter, filterAktiv, listenFiltern } from '../data/store'
+import SuchLeiste from '../components/SuchLeiste.vue'
 
 const neuerName = ref('')
 const bearbeiteId = ref(null)
 const bearbeiteName = ref('')
+
+const filter = reactive(leererFilter())
+const gefiltert = computed(() => listenFiltern(listen, filter))
 
 function anlegen() {
   if (!neuerName.value.trim()) return
@@ -38,9 +42,13 @@ function loeschen(liste) {
   </form>
 
   <p v-if="listen.length === 0" class="gedimmt">Noch keine Einkaufslisten vorhanden.</p>
+  <template v-else>
+    <SuchLeiste v-model="filter" platzhalter="Listen und Produkte durchsuchen …" />
+    <p v-if="gefiltert.length === 0" class="gedimmt">Keine Liste passt zu deiner Suche.</p>
+  </template>
 
   <ul class="karten">
-    <li v-for="liste in listen" :key="liste.id" class="karte">
+    <li v-for="{ liste, treffer } in gefiltert" :key="liste.id" class="karte">
       <form v-if="bearbeiteId === liste.id" class="zeile" @submit.prevent="umbenennenSpeichern">
         <input v-model="bearbeiteName" />
         <button type="submit" class="primaer">Speichern</button>
@@ -50,6 +58,9 @@ function loeschen(liste) {
         <RouterLink :to="`/listen/${liste.id}`" class="karte-titel">
           {{ liste.name }}
           <span class="gedimmt">{{ liste.produkte.length }} Produkte</span>
+          <span v-if="filterAktiv(filter) && treffer.length" class="treffer">
+            Treffer: {{ treffer.map((produkt) => produkt.name).join(', ') }}
+          </span>
         </RouterLink>
         <div class="aktionen">
           <button @click="umbenennenStarten(liste)">Umbenennen</button>
