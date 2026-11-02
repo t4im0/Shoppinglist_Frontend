@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { findeListe, produktHinzufuegen, produktLoeschen, leererFilter, produktPasst } from '../data/store'
+import { findeListe, produktHinzufuegen, produktErledigtSetzen, produktLoeschen, leererFilter, produktPasst } from '../data/store'
 import ProduktDialog from '../components/ProduktDialog.vue'
 import SuchLeiste from '../components/SuchLeiste.vue'
 
@@ -12,9 +12,32 @@ const dialogOffen = ref(false)
 const filter = reactive(leererFilter())
 const gefilterteProdukte = computed(() => (liste.value?.produkte ?? []).filter((produkt) => produktPasst(produkt, filter)))
 
-function hinzufuegen(produkt) {
-  produktHinzufuegen(liste.value.id, produkt)
-  dialogOffen.value = false
+async function hinzufuegen(produkt) {
+  try {
+    await produktHinzufuegen(liste.value.id, produkt)
+    dialogOffen.value = false
+  } catch (error) {
+    console.log('error', error)
+    alert('Das Produkt konnte nicht gespeichert werden.')
+  }
+}
+
+async function erledigtSetzen(produkt, erledigt) {
+  try {
+    await produktErledigtSetzen(liste.value.id, produkt, erledigt)
+  } catch (error) {
+    console.log('error', error)
+    alert('Der Status konnte nicht gespeichert werden.')
+  }
+}
+
+async function loeschen(produkt) {
+  try {
+    await produktLoeschen(liste.value.id, produkt.id)
+  } catch (error) {
+    console.log('error', error)
+    alert('Das Produkt konnte nicht gelöscht werden.')
+  }
 }
 </script>
 
@@ -36,13 +59,13 @@ function hinzufuegen(produkt) {
 
     <ul class="karten">
       <li v-for="produkt in gefilterteProdukte" :key="produkt.id" class="karte produkt" :class="{ erledigt: produkt.erledigt }">
-        <input v-model="produkt.erledigt" type="checkbox" />
+        <input :checked="produkt.erledigt" type="checkbox" @change="erledigtSetzen(produkt, $event.target.checked)" />
         <div class="produkt-text">
           <strong>{{ produkt.menge }} × {{ produkt.name }}</strong>
           <span v-if="produkt.markt" class="markt-chip">{{ produkt.markt }}</span>
           <div v-if="produkt.notiz" class="gedimmt">{{ produkt.notiz }}</div>
         </div>
-        <button class="gefahr" title="Produkt löschen" @click="produktLoeschen(liste.id, produkt.id)">✕</button>
+        <button class="gefahr" title="Produkt löschen" @click="loeschen(produkt)">✕</button>
       </li>
     </ul>
 

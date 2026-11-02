@@ -2,7 +2,7 @@ import { reactive, ref, computed } from 'vue'
 import axios from 'axios'
 import { accessToken } from '../auth/okta'
 
-// Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend. Neue Listen werden in der Datenbank gespeichert, alle anderen Änderungen leben noch im Browser.
+// Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend. Neue Listen und Produkte werden in der Datenbank gespeichert. Umbenennen und Löschen von Listen leben noch im Browser.
 export const listen = reactive([])
 export const ladestatus = ref('laden')
 
@@ -33,8 +33,6 @@ export function listenLeeren() {
   ladestatus.value = 'laden'
 }
 
-let naechsteId = 1000
-
 export function findeListe(id) {
   return listen.find((liste) => liste.id === Number(id))
 }
@@ -57,11 +55,32 @@ export function listeLoeschen(id) {
   listen.splice(index, 1)
 }
 
-export function produktHinzufuegen(listeId, produkt) {
-  findeListe(listeId).produkte.push({ id: naechsteId++, erledigt: false, ...produkt })
+// Produkte werden in der Datenbank gespeichert, die Antwort des Backends enthält die vergebene id
+function produkteEndpoint(listeId) {
+  return `${import.meta.env.VITE_API_URL}/shoppinglists/${listeId}/produkte`
 }
 
-export function produktLoeschen(listeId, produktId) {
+function mitToken() {
+  return { headers: { Authorization: `Bearer ${accessToken()}` } }
+}
+
+export async function produktHinzufuegen(listeId, produkt) {
+  const response = await axios.post(produkteEndpoint(listeId), produkt, mitToken())
+  findeListe(listeId).produkte.push(response.data)
+}
+
+export async function produktErledigtSetzen(listeId, produkt, erledigt) {
+  produkt.erledigt = erledigt // sofort anzeigen, bei einem Fehler zurücksetzen
+  try {
+    await axios.patch(`${produkteEndpoint(listeId)}/${produkt.id}`, { erledigt }, mitToken())
+  } catch (error) {
+    produkt.erledigt = !erledigt
+    throw error
+  }
+}
+
+export async function produktLoeschen(listeId, produktId) {
+  await axios.delete(`${produkteEndpoint(listeId)}/${produktId}`, mitToken())
   const liste = findeListe(listeId)
   liste.produkte = liste.produkte.filter((produkt) => produkt.id !== produktId)
 }
