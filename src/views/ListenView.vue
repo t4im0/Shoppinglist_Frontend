@@ -11,10 +11,15 @@ const bearbeiteName = ref('')
 const filter = reactive(leererFilter())
 const gefiltert = computed(() => listenFiltern(listen, filter))
 
-function anlegen() {
+async function anlegen() {
   if (!neuerName.value.trim()) return
-  listeAnlegen(neuerName.value.trim())
-  neuerName.value = ''
+  try {
+    await listeAnlegen(neuerName.value.trim())
+    neuerName.value = ''
+  } catch (error) {
+    console.log('error', error)
+    alert('Die Liste konnte nicht gespeichert werden.')
+  }
 }
 
 function umbenennenStarten(liste) {

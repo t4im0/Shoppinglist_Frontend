@@ -2,7 +2,7 @@ import { reactive, ref, computed } from 'vue'
 import axios from 'axios'
 import { accessToken } from '../auth/okta'
 
-// Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend, Änderungen leben aber nur im Browser (bis M4).
+// Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend. Neue Listen werden in der Datenbank gespeichert, alle anderen Änderungen leben noch im Browser.
 export const listen = reactive([])
 export const ladestatus = ref('laden')
 
@@ -39,8 +39,13 @@ export function findeListe(id) {
   return listen.find((liste) => liste.id === Number(id))
 }
 
-export function listeAnlegen(name) {
-  listen.push({ id: naechsteId++, name, produkte: [] })
+// Speichert eine neue Liste per POST in der Datenbank und übernimmt die Antwort (mit der vergebenen id)
+export async function listeAnlegen(name) {
+  const endpoint = import.meta.env.VITE_API_URL + '/shoppinglists'
+  const response = await axios.post(endpoint, { name }, {
+    headers: { Authorization: `Bearer ${accessToken()}` },
+  })
+  listen.push(response.data)
 }
 
 export function listeUmbenennen(id, name) {
