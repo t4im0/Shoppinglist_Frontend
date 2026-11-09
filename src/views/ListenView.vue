@@ -88,7 +88,7 @@ async function verlassen(liste) {
           {{ liste.name }}
           <span class="gedimmt">{{ liste.produkte.length }} Produkte</span>
           <span v-if="!binBesitzer(liste)" class="geteilt">Geteilt von {{ liste.owner }}</span>
-          <span v-else-if="liste.mitglieder.length" class="geteilt">Geteilt mit {{ liste.mitglieder.length }} {{ liste.mitglieder.length === 1 ? 'Person' : 'Personen' }}</span>
+          <span v-else-if="liste.mitglieder?.length" class="geteilt">Geteilt mit {{ liste.mitglieder.length }} {{ liste.mitglieder.length === 1 ? 'Person' : 'Personen' }}</span>
           <span v-if="filterAktiv(filter) && treffer.length" class="treffer">
             Treffer: {{ treffer.map((produkt) => produkt.name).join(', ') }}
           </span>

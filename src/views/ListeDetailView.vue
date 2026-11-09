@@ -16,7 +16,7 @@ const dialogOffen = ref(false)
 const teilenOffen = ref(false)
 
 const besitzer = computed(() => liste.value && binBesitzer(liste.value))
-const geteilt = computed(() => liste.value && (!besitzer.value || liste.value.mitglieder.length > 0))
+const geteilt = computed(() => liste.value && (!besitzer.value || liste.value.mitglieder?.length > 0))
 
 // Geteilte Listen alle 10 Sekunden neu laden, damit Änderungen der anderen erscheinen
 let timer
@@ -84,7 +84,7 @@ async function loeschen(produkt) {
       </div>
     </div>
     <p v-if="!besitzer" class="geteilt">Geteilt von {{ liste.owner }}</p>
-    <p v-else-if="liste.mitglieder.length" class="geteilt">Geteilt mit {{ liste.mitglieder.join(', ') }}</p>
+    <p v-else-if="liste.mitglieder?.length" class="geteilt">Geteilt mit {{ liste.mitglieder.join(', ') }}</p>
 
     <p v-if="liste.produkte.length === 0" class="gedimmt">Noch keine Produkte in dieser Liste.</p>
     <template v-else>

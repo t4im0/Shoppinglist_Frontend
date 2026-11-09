@@ -81,7 +81,7 @@ function datum(zeitpunkt) {
       <p v-if="fehler" class="gefahr-text">{{ fehler }}</p>
 
       <h3>Mitglieder</h3>
-      <p v-if="liste.mitglieder.length === 0" class="gedimmt">Noch niemand ist der Liste beigetreten.</p>
+      <p v-if="!liste.mitglieder?.length" class="gedimmt">Noch niemand ist der Liste beigetreten.</p>
       <ul class="mitglieder">
         <li v-for="person in liste.mitglieder" :key="person">
           <span>{{ person }}</span>
