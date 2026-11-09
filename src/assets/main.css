@@ -77,7 +77,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .karte-titel { flex: 1; display: flex; flex-direction: column; font-weight: 600; }
 .produkt { justify-content: flex-start; }
 .produkt input[type='checkbox'] { width: 1.2rem; height: 1.2rem; accent-color: var(--farbe-primaer); }
-.produkt-text { flex: 1; }
+.produkt-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.bearbeitbar { cursor: pointer; }
+/* Bearbeiten- und Löschen-Knopf bleiben auch bei langen Namen auf schmalen Bildschirmen sichtbar */
+.produkt > button { flex-shrink: 0; min-width: 2.5rem; min-height: 2.5rem; padding: 0.3rem 0.6rem; }
 .erledigt .produkt-text { text-decoration: line-through; opacity: 0.55; }
 .markt-chip {
   margin-left: 0.5rem; padding: 0.1rem 0.5rem; border-radius: 999px; background: #e8f5e9;

@@ -2,12 +2,15 @@
 import { computed, ref } from 'vue'
 import { bekannteMaerkte, marktAbgleichen } from '../data/store'
 
+// Ohne "produkt" wird ein neues Produkt angelegt, mit "produkt" wird es bearbeitet
+const props = defineProps({ produkt: { type: Object, default: null } })
 const emit = defineEmits(['hinzufuegen', 'verwerfen'])
 
-const name = ref('')
-const menge = ref(1)
-const markt = ref('')
-const notiz = ref('')
+const bearbeiten = computed(() => props.produkt !== null)
+const name = ref(props.produkt?.name ?? '')
+const menge = ref(props.produkt?.menge ?? 1)
+const markt = ref(props.produkt?.markt ?? '')
+const notiz = ref(props.produkt?.notiz ?? '')
 
 const nameFehlt = computed(() => !name.value.trim())
 const mengeUngueltig = computed(() => !Number.isInteger(menge.value) || menge.value < 1)
@@ -32,7 +35,7 @@ function hinzufuegen() {
 <template>
   <div class="overlay" @click.self="emit('verwerfen')">
     <form class="dialog" @submit.prevent="hinzufuegen">
-      <h2>Produkt hinzufügen</h2>
+      <h2>{{ bearbeiten ? 'Produkt bearbeiten' : 'Produkt hinzufügen' }}</h2>
 
       <label>
         Name *
@@ -60,7 +63,9 @@ function hinzufuegen() {
 
       <div class="aktionen">
         <button type="button" @click="emit('verwerfen')">Verwerfen</button>
-        <button type="submit" class="primaer" :disabled="nameFehlt || mengeUngueltig">Hinzufügen</button>
+        <button type="submit" class="primaer" :disabled="nameFehlt || mengeUngueltig">
+          {{ bearbeiten ? 'Speichern' : 'Hinzufügen' }}
+        </button>
       </div>
     </form>
   </div>

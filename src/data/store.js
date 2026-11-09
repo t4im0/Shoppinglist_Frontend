@@ -97,6 +97,12 @@ export async function produktErledigtSetzen(listeId, produkt, erledigt) {
   }
 }
 
+// Speichert Name, Menge, Markt und Notiz; der Erledigt-Status bleibt unverändert
+export async function produktBearbeiten(listeId, produkt, geaendert) {
+  const response = await axios.put(`${produkteEndpoint(listeId)}/${produkt.id}`, geaendert, mitToken())
+  Object.assign(produkt, response.data)
+}
+
 export async function produktLoeschen(listeId, produktId) {
   await axios.delete(`${produkteEndpoint(listeId)}/${produktId}`, mitToken())
   const liste = findeListe(listeId)

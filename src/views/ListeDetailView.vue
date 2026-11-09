@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import {
-  findeListe, produktHinzufuegen, produktErledigtSetzen, produktLoeschen, leererFilter, produktPasst,
+  findeListe, produktHinzufuegen, produktBearbeiten, produktErledigtSetzen, produktLoeschen, leererFilter, produktPasst,
   binBesitzer, meineKennung, mitgliedEntfernen, listenAktualisieren,
 } from '../data/store'
 import ProduktDialog from '../components/ProduktDialog.vue'
@@ -14,6 +14,7 @@ const liste = computed(() => findeListe(route.params.id))
 const router = useRouter()
 const dialogOffen = ref(false)
 const teilenOffen = ref(false)
+const bearbeitetesProdukt = ref(null)
 
 const besitzer = computed(() => liste.value && binBesitzer(liste.value))
 const geteilt = computed(() => liste.value && (!besitzer.value || liste.value.mitglieder?.length > 0))
@@ -22,7 +23,7 @@ const geteilt = computed(() => liste.value && (!besitzer.value || liste.value.mi
 let timer
 onMounted(() => {
   timer = setInterval(() => {
-    if (geteilt.value && !dialogOffen.value) listenAktualisieren().catch((error) => console.log('error', error))
+    if (geteilt.value && !dialogOffen.value && !bearbeitetesProdukt.value) listenAktualisieren().catch((error) => console.log('error', error))
   }, 10000)
 })
 onUnmounted(() => clearInterval(timer))
@@ -48,6 +49,19 @@ async function hinzufuegen(produkt) {
   } catch (error) {
     console.log('error', error)
     alert('Das Produkt konnte nicht gespeichert werden.')
+  }
+}
+
+async function speichern(geaendert) {
+  try {
+    await produktBearbeiten(liste.value.id, bearbeitetesProdukt.value, geaendert)
+    bearbeitetesProdukt.value = null
+  } catch (error) {
+    console.log('error', error)
+    // 405: Das Backend kennt das Bearbeiten noch nicht (noch nicht neu deployt)
+    alert(error.response?.status === 405
+      ? 'Bearbeiten ist erst nach dem nächsten Backend-Update möglich.'
+      : 'Die Änderungen konnten nicht gespeichert werden.')
   }
 }
 
@@ -95,16 +109,23 @@ async function loeschen(produkt) {
     <ul class="karten">
       <li v-for="produkt in gefilterteProdukte" :key="produkt.id" class="karte produkt" :class="{ erledigt: produkt.erledigt }">
         <input :checked="produkt.erledigt" type="checkbox" @change="erledigtSetzen(produkt, $event.target.checked)" />
-        <div class="produkt-text">
+        <div class="produkt-text bearbeitbar" title="Produkt bearbeiten" @click="bearbeitetesProdukt = produkt">
           <strong>{{ produkt.menge }} × {{ produkt.name }}</strong>
           <span v-if="produkt.markt" class="markt-chip">{{ produkt.markt }}</span>
           <div v-if="produkt.notiz" class="gedimmt">{{ produkt.notiz }}</div>
         </div>
+        <button title="Produkt bearbeiten" @click="bearbeitetesProdukt = produkt">✎</button>
         <button class="gefahr" title="Produkt löschen" @click="loeschen(produkt)">✕</button>
       </li>
     </ul>
 
     <ProduktDialog v-if="dialogOffen" @hinzufuegen="hinzufuegen" @verwerfen="dialogOffen = false" />
+    <ProduktDialog
+      v-if="bearbeitetesProdukt"
+      :produkt="bearbeitetesProdukt"
+      @hinzufuegen="speichern"
+      @verwerfen="bearbeitetesProdukt = null"
+    />
     <TeilenDialog v-if="teilenOffen" :liste="liste" @schliessen="teilenOffen = false" />
   </template>
 </template>
