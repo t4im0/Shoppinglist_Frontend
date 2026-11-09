@@ -1,7 +1,10 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { listen, listeAnlegen, listeUmbenennen, listeLoeschen, leererFilter, filterAktiv, listenFiltern } from '../data/store'
+import {
+  listen, listeAnlegen, listeUmbenennen, listeLoeschen, leererFilter, filterAktiv, listenFiltern,
+  binBesitzer, meineKennung, mitgliedEntfernen,
+} from '../data/store'
 import SuchLeiste from '../components/SuchLeiste.vue'
 
 const neuerName = ref('')
@@ -46,6 +49,16 @@ async function loeschen(liste) {
     alert('Die Liste konnte nicht gelöscht werden.')
   }
 }
+
+async function verlassen(liste) {
+  if (!confirm(`Liste „${liste.name}“ verlassen?`)) return
+  try {
+    await mitgliedEntfernen(liste.id, meineKennung())
+  } catch (error) {
+    console.log('error', error)
+    alert('Die Liste konnte nicht verlassen werden.')
+  }
+}
 </script>
 
 <template>
@@ -74,13 +87,16 @@ async function loeschen(liste) {
         <RouterLink :to="`/listen/${liste.id}`" class="karte-titel">
           {{ liste.name }}
           <span class="gedimmt">{{ liste.produkte.length }} Produkte</span>
+          <span v-if="!binBesitzer(liste)" class="geteilt">Geteilt von {{ liste.owner }}</span>
+          <span v-else-if="liste.mitglieder.length" class="geteilt">Geteilt mit {{ liste.mitglieder.length }} {{ liste.mitglieder.length === 1 ? 'Person' : 'Personen' }}</span>
           <span v-if="filterAktiv(filter) && treffer.length" class="treffer">
             Treffer: {{ treffer.map((produkt) => produkt.name).join(', ') }}
           </span>
         </RouterLink>
         <div class="aktionen">
           <button @click="umbenennenStarten(liste)">Umbenennen</button>
-          <button class="gefahr" @click="loeschen(liste)">Löschen</button>
+          <button v-if="binBesitzer(liste)" class="gefahr" @click="loeschen(liste)">Löschen</button>
+          <button v-else class="gefahr" @click="verlassen(liste)">Verlassen</button>
         </div>
       </template>
     </li>

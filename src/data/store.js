@@ -1,6 +1,6 @@
 import { reactive, ref, computed } from 'vue'
 import axios from 'axios'
-import { accessToken } from '../auth/okta'
+import { accessToken, oktaAuth } from '../auth/okta'
 
 // Gemeinsamer Zustand aller Seiten. Die Listen kommen vom Backend. Alle Änderungen an Listen und Produkten werden über das Backend in der Datenbank gespeichert.
 export const listen = reactive([])
@@ -25,6 +25,22 @@ export async function listenLaden() {
     console.log('error', error)
     ladestatus.value = 'fehler'
   }
+}
+
+// Lädt die Listen still im Hintergrund neu, z. B. um Änderungen anderer Mitglieder zu sehen
+export async function listenAktualisieren() {
+  const response = await axios.get(import.meta.env.VITE_API_URL + '/shoppinglists', mitToken())
+  listen.splice(0, listen.length, ...response.data)
+}
+
+// Okta-Kennung der angemeldeten Person (wie "owner" und "mitglieder" im Backend)
+export function meineKennung() {
+  const token = accessToken()
+  return token ? oktaAuth.token.decode(token).payload.sub : null
+}
+
+export function binBesitzer(liste) {
+  return liste.owner === meineKennung()
 }
 
 // Beim Abmelden: Listen der vorherigen Person aus dem Browser entfernen
@@ -135,4 +151,60 @@ export function listenFiltern(alleListen, filter) {
       return { liste, treffer, sichtbar }
     })
     .filter((eintrag) => eintrag.sichtbar)
+}
+
+// --- Teilen per Einladungslink ---
+
+function listeEndpoint(listeId) {
+  return `${import.meta.env.VITE_API_URL}/shoppinglists/${listeId}`
+}
+
+export function einladungsUrl(token) {
+  return `${window.location.origin}/einladung/${token}`
+}
+
+// Aktueller Link der Liste oder null, falls es keinen gültigen gibt
+export async function einladungLesen(listeId) {
+  try {
+    const response = await axios.get(`${listeEndpoint(listeId)}/einladung`, mitToken())
+    return response.data
+  } catch (error) {
+    if (error.response?.status === 404) return null
+    throw error
+  }
+}
+
+export async function einladungErstellen(listeId) {
+  const response = await axios.post(`${listeEndpoint(listeId)}/einladung`, null, mitToken())
+  return response.data
+}
+
+export async function einladungWiderrufen(listeId) {
+  await axios.delete(`${listeEndpoint(listeId)}/einladung`, mitToken())
+}
+
+export async function einladungAnsehen(token) {
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/einladungen/${token}`, mitToken())
+  return response.data
+}
+
+export async function einladungAnnehmen(token) {
+  const response = await axios.post(`${import.meta.env.VITE_API_URL}/einladungen/${token}/annehmen`, null, mitToken())
+  const liste = response.data
+  const index = listen.findIndex((l) => l.id === liste.id)
+  if (index === -1) listen.push(liste)
+  else listen.splice(index, 1, liste)
+  return liste
+}
+
+// Besitzer entfernt ein Mitglied, oder ein Mitglied verlässt die Liste (person = eigene Kennung)
+export async function mitgliedEntfernen(listeId, person) {
+  await axios.delete(`${listeEndpoint(listeId)}/mitglieder/${encodeURIComponent(person)}`, mitToken())
+  if (person === meineKennung()) {
+    const index = listen.findIndex((liste) => liste.id === listeId)
+    if (index !== -1) listen.splice(index, 1)
+  } else {
+    const liste = findeListe(listeId)
+    liste.mitglieder = liste.mitglieder.filter((mitglied) => mitglied !== person)
+  }
 }
