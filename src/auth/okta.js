@@ -8,6 +8,12 @@ export const oktaAuth = new OktaAuth({
   redirectUri: window.location.origin + '/login/callback',
   scopes: ['openid', 'profile', 'email'],
   pkce: true,
+  // Als App vom Home-Bildschirm öffnet iOS die Okta-Anmeldung in einem eigenen Fenster.
+  // Im localStorage bleiben PKCE-Daten und Tokens dabei sicher erhalten.
+  storageManager: {
+    token: { storageType: 'localStorage' },
+    transaction: { storageType: 'localStorage' },
+  },
 })
 
 // Anmeldestatus für alle Komponenten
