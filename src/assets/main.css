@@ -113,3 +113,21 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .gefahr-text { color: var(--farbe-gefahr); margin: 0; }
 .einladung { flex-direction: column; align-items: flex-start; gap: 0.8rem; }
 .button-link { padding: 0.5rem 0.9rem; border-radius: 8px; background: var(--farbe-primaer); color: white; }
+
+/* Schmale Bildschirme (iPhone): nichts darf über den Rand hinausragen */
+.logo { white-space: nowrap; }
+.konto { min-width: 0; }
+.konto .gedimmt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.titelzeile { flex-wrap: wrap; }
+.titelzeile h1, .karte-titel, .produkt-text { min-width: 0; overflow-wrap: anywhere; }
+.aktionen { flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .konto .gedimmt { display: none; }
+  .titelzeile { gap: 0.5rem; }
+  .titelzeile h1 { flex-basis: 100%; margin-bottom: 0; }
+  .titelzeile .aktionen { flex-basis: 100%; justify-content: flex-start; }
+  .karte:not(.produkt) { flex-wrap: wrap; }
+  .karte:not(.produkt) > .aktionen { flex-basis: 100%; justify-content: flex-start; }
+  .zeile input { min-width: 0; }
+}
